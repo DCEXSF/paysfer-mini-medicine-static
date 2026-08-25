@@ -11,6 +11,48 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <header class="topbar" aria-label="Main navigation">
+      <div class="topbar-inner">
+        <a class="brand" href="https://www.paysfer.com/" aria-label="Paysfer home" target="_blank" rel="noopener noreferrer">
+          <img src="https://storage.googleapis.com/content.paysfer.com/banner/white-logo.png" alt="Paysfer" />
+        </a>
+
+        <div class="search-wrap">
+          <label class="search-field" for="searchInput">
+            <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"></circle>
+              <path d="M16 16L21 21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path>
+            </svg>
+            <input
+              id="searchInput"
+              type="search"
+              placeholder="Search by title, ISBN"
+              aria-label="Search products"
+            />
+          </label>
+        </div>
+
+        <div class="header-actions">
+          <a class="login-link" href="https://www.paysfer.com/signin" aria-label="Login" target="_blank" rel="noopener noreferrer">
+            <svg class="header-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.8"></circle>
+              <path d="M4 19c1.7-3 4.5-4.5 8-4.5S18.3 16 20 19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+            </svg>
+            <span>Login</span>
+          </a>
+
+          <a class="cart-link" href="https://www.paysfer.com/cart" aria-label="Cart" target="_blank" rel="noopener noreferrer">
+            <svg class="header-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="9" cy="18" r="1.6" fill="currentColor"></circle>
+              <circle cx="17" cy="18" r="1.6" fill="currentColor"></circle>
+              <path d="M3.5 4h2.1l2.6 9.5h9.5l2.3-7H7.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            <span>Cart</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
     <main class="page-shell">
       <section class="hero-banner" aria-label="Mini Medicine banner"></section>
 
@@ -26,6 +68,8 @@
       const sellerId = '0592de2a-815c-4929';
 
       const productGrid = document.getElementById('productsGrid');
+      const searchInput = document.getElementById('searchInput');
+      let allProducts = [];
 
       function escapeHtml(value = '') {
         return String(value)
@@ -120,6 +164,31 @@
         });
       }
 
+      function filterProducts(searchTerm) {
+        const normalizedSearch = searchTerm.trim().toLowerCase();
+
+        if (!normalizedSearch) {
+          renderProducts(allProducts);
+          return;
+        }
+
+        const filteredProducts = allProducts.filter((product) => {
+          const title = String(product?.title || '').toLowerCase();
+          const isbn = String(product?.isbn || product?.ISBN || '').toLowerCase();
+          const author = String(product?.author || '').toLowerCase();
+
+          return title.includes(normalizedSearch) || isbn.includes(normalizedSearch) || author.includes(normalizedSearch);
+        });
+
+        renderProducts(filteredProducts);
+      }
+
+      if (searchInput) {
+        searchInput.addEventListener('input', (event) => {
+          filterProducts(event.target.value);
+        });
+      }
+
       async function fetchProducts() {
         try {
           const response = await fetch(API_URL, {
@@ -136,7 +205,8 @@
 
           const data = await response.json();
           const products = data?.ResponseBody?.products || [];
-          renderProducts(products);
+          allProducts = products;
+          renderProducts(allProducts);
         } catch (error) {
           console.error('Failed to load products:', error);
           productGrid.innerHTML = '<p class="empty-state">Unable to load products right now.</p>';
