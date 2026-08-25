@@ -6,119 +6,144 @@
     <title>Mini Medicine</title>
     <meta
       name="description"
-      content="Mini Medicine is a supplement store offering high-quality wellness products for energy, immunity, performance, and daily health."
+      content="Mini Medicine product listing for supplements and wellness essentials."
     />
-    <meta name="canonical" content="https://minimedicine.co/" />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://minimedicine.co/" />
-    <meta property="og:title" content="Mini Medicine" />
-    <meta
-      property="og:description"
-      content="Supplements for everyday health and better living — energy, immunity, and total wellness support."
-    />
-    <meta property="og:image" content="https://storage.googleapis.com/content.paysfer.com/banner/mini_medicine_banner_v2.jpeg" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Mini Medicine premium wellness supplements preview image" />
-    <meta property="og:site_name" content="Mini Medicine" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Mini Medicine" />
-    <meta
-      name="twitter:description"
-      content="Supplements for everyday health and better living — energy, immunity, and total wellness support."
-    />
-    <meta name="twitter:image" content="https://storage.googleapis.com/content.paysfer.com/banner/mini_medicine_banner_v2.jpeg" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="topbar">
-      <div class="container nav">
-        <div class="brand">
-          <span class="brand-mark">M</span>
-          <span>Mini Medicine</span>
-        </div>
-        <a class="primary-button" href="https://www.paysfer.com/mini-medicine" target="_blank" rel="noreferrer">
-          Visit Mini Medicine
-        </a>
-      </div>
-    </header>
+    <main class="page-shell">
+      <section class="hero-banner" aria-label="Mini Medicine banner"></section>
 
-    <main>
-      <section class="hero">
-        <div class="container hero-grid">
-          <div class="hero-copy">
-            <p class="eyebrow">Supplements for everyday health</p>
-            <h1>Fuel your body with premium wellness support.</h1>
-            <p class="lead">
-              Mini Medicine is a supplement store focused on helping people improve their health with
-              trusted products for immunity, energy, performance, digestion, and overall wellbeing.
-            </p>
-            <div class="cta-group">
-              <a class="primary-button" href="https://www.paysfer.com/mini-medicine" target="_blank" rel="noreferrer">
-                Shop Supplements
-              </a>
-              <a class="secondary-button" href="#about">Learn More</a>
-            </div>
-          </div>
-
-          <div class="hero-card">
-            <div class="card-badge">Premium Wellness</div>
-            <h2>Why customers choose Mini Medicine</h2>
-            <ul>
-              <li>High-quality supplements for daily health</li>
-              <li>Products for energy, immunity, and vitality</li>
-              <li>Carefully selected formulas for better wellbeing</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <section id="about" class="info-section">
-        <div class="container two-column">
-          <div>
-            <p class="section-tag">About us</p>
-            <h2>Your daily wellness essentials.</h2>
-          </div>
-          <div>
-            <p>
-              Mini Medicine is a modern supplement store built for people who want to support their health
-              with effective and convenient products. From vitamins and protein to immunity and recovery
-              essentials, we help customers build better routines for a healthier lifestyle.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section class="feature-section">
+      <section class="products-section">
         <div class="container">
-          <div class="section-heading">
-            <p class="section-tag">What we offer</p>
-            <h2>Supplements designed for better living.</h2>
-          </div>
-
-          <div class="feature-grid">
-            <article class="feature-card">
-              <h3>Energy Support</h3>
-              <p>Boost your daily performance with supplements designed to support stamina and alertness.</p>
-            </article>
-            <article class="feature-card">
-              <h3>Immunity Care</h3>
-              <p>Strengthen your body’s defenses with vitamins and wellness formulas for everyday protection.</p>
-            </article>
-            <article class="feature-card">
-              <h3>General Wellness</h3>
-              <p>Explore products that support digestion, recovery, and overall health for a balanced routine.</p>
-            </article>
-          </div>
+          <div id="productsGrid" class="products-grid" aria-live="polite"></div>
         </div>
       </section>
     </main>
 
-    <footer class="footer">
-      <div class="container footer-inner">
-        <p>© 2026 Mini Medicine</p>
-        <a href="https://www.paysfer.com/mini-medicine" target="_blank" rel="noreferrer">Visit Paysfer Mini Medicine</a>
-      </div>
-    </footer>
+    <script>
+      const API_URL = 'https://paysfer-backend-337705274204.us-central1.run.app/seller/v1/seller-pagination-products';
+      const sellerId = '0592de2a-815c-4929';
+
+      const productGrid = document.getElementById('productsGrid');
+
+      function escapeHtml(value = '') {
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function slugifyTitle(title = '') {
+        return String(title)
+          .replace(/[^a-zA-Z0-9]+/g, '_')
+          .replace(/^_+|_+$/g, '')
+          .replace(/_+/g, '_');
+      }
+
+      function buildProductUrl(product) {
+        const productId = product?._id || product?.id || '';
+        const title = product?.title || 'Product';
+        const slug = slugifyTitle(title);
+
+        if (!productId) {
+          return '#';
+        }
+
+        return `https://www.paysfer.com/product-page/${productId}/${slug}?src=from-search`;
+      }
+
+      function renderProducts(products) {
+        if (!Array.isArray(products) || !products.length) {
+          productGrid.innerHTML = '<p class="empty-state">No products found.</p>';
+          return;
+        }
+
+        productGrid.innerHTML = products
+          .map((product) => {
+            const title = product.title || 'Supplement product';
+            const image = product.productgroupimageurl1 || (Array.isArray(product.productgroupimageurl2) ? product.productgroupimageurl2[0] : '');
+            const originalPrice = Number(product.price && product.price[0] ? product.price[0] : 0);
+            const salePrice = Number(product.saleprice && product.saleprice[0] ? product.saleprice[0] : originalPrice);
+            const discountPercent = originalPrice > salePrice ? Math.round(((originalPrice - salePrice) / originalPrice) * 100) : 0;
+            const isMapProduct = Boolean(product.map);
+            const listPrice = Number(product.bookMeta?.stock?.listPrice || originalPrice || 0);
+            const displayPrice = isMapProduct ? listPrice : salePrice;
+            const productUrl = buildProductUrl(product);
+
+            return `
+              <article class="product-card" data-product-url="${escapeHtml(productUrl)}">
+                <div class="product-image-wrap">
+                  <img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" loading="lazy" />
+                  ${discountPercent && !isMapProduct ? `<span class="product-badge">${discountPercent}% off</span>` : ''}
+                </div>
+                <h3>${escapeHtml(title)}</h3>
+                <div class="price-row">
+                  ${isMapProduct
+                    ? `<span class="price">$${displayPrice.toFixed(2)}</span>`
+                    : `<span class="price">$${salePrice.toFixed(2)}</span>
+                      ${originalPrice > salePrice ? `<span class="old-price">$${originalPrice.toFixed(2)}</span>` : ''}`}
+                </div>
+                ${isMapProduct ? `<div class="checkout-discount">Get ${discountPercent}% discount at checkout</div>` : ''}
+                <div class="stock-row"><span class="stock-dot"></span>In Stock</div>
+                <button type="button" class="add-cart" data-product-url="${escapeHtml(productUrl)}">Buy Now</button>
+              </article>
+            `;
+          })
+          .join('');
+
+        productGrid.querySelectorAll('.product-card').forEach((card) => {
+          card.addEventListener('click', (event) => {
+            const target = event.target;
+            if (target.closest('.add-cart')) {
+              event.stopPropagation();
+              return;
+            }
+
+            const productUrl = card.dataset.productUrl;
+            if (productUrl && productUrl !== '#') {
+              window.open(productUrl, '_blank', 'noopener,noreferrer');
+            }
+          });
+        });
+
+        productGrid.querySelectorAll('.add-cart').forEach((button) => {
+          button.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const productUrl = button.dataset.productUrl;
+            if (productUrl && productUrl !== '#') {
+              window.open(productUrl, '_blank', 'noopener,noreferrer');
+            }
+          });
+        });
+      }
+
+      async function fetchProducts() {
+        try {
+          const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ sellerId, page: 1 })
+          });
+
+          if (!response.ok) {
+            throw new Error(`Request failed with status ${response.status}`);
+          }
+
+          const data = await response.json();
+          const products = data?.ResponseBody?.products || [];
+          renderProducts(products);
+        } catch (error) {
+          console.error('Failed to load products:', error);
+          productGrid.innerHTML = '<p class="empty-state">Unable to load products right now.</p>';
+        }
+      }
+
+      fetchProducts();
+    </script>
   </body>
 </html>
